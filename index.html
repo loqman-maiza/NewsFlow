@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NewsFlow - Réseau Social d'Information</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans:wght@400;500;600&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -32,7 +37,6 @@
             overflow-x: hidden;
         }
 
-        /* Background Effects */
         body::before {
             content: '';
             position: fixed;
@@ -55,7 +59,6 @@
             z-index: 1;
         }
 
-        /* Header */
         header {
             padding: 40px 0 30px;
             border-bottom: 2px solid var(--border);
@@ -95,7 +98,84 @@
             font-weight: 500;
         }
 
-        /* Post Form */
+        .firebase-setup {
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px dashed var(--accent-hot);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out 0.1s backwards;
+        }
+
+        .firebase-setup h3 {
+            font-family: 'Courier Prime', monospace;
+            color: var(--accent-hot);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .firebase-setup p {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+
+        .firebase-setup code {
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--accent-cool);
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9rem;
+        }
+
+        .firebase-setup ol {
+            margin-left: 20px;
+            color: var(--text-secondary);
+            line-height: 2;
+        }
+
+        .firebase-setup strong {
+            color: var(--text-primary);
+        }
+
+        .firebase-setup a {
+            color: var(--accent-cool);
+            text-decoration: none;
+        }
+
+        .firebase-setup a:hover {
+            text-decoration: underline;
+        }
+
+        .firebase-setup pre {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff88;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .post-form {
             background: var(--bg-card);
             padding: 35px;
@@ -189,7 +269,6 @@
             transform: translateY(0);
         }
 
-        /* Sorting */
         .sorting {
             display: flex;
             gap: 15px;
@@ -222,7 +301,6 @@
             border-color: var(--accent-cool);
         }
 
-        /* Posts */
         .posts {
             display: grid;
             gap: 25px;
@@ -419,6 +497,11 @@
             .sorting {
                 flex-wrap: wrap;
             }
+
+            header > div {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
         }
 
         @keyframes slideInRight {
@@ -453,15 +536,47 @@
                     <p class="tagline">L'information par la communauté</p>
                 </div>
                 <div class="user-info">
+                    <span id="connectionStatus" style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 15px;">
+                        <span class="status-indicator" id="statusDot"></span>
+                        <span id="statusText">Déconnecté</span>
+                    </span>
                     <span id="currentUserDisplay" style="color: var(--text-secondary); font-size: 0.95rem; margin-right: 15px;">
                         Chargement...
                     </span>
                     <button id="changeUser" class="btn" style="padding: 10px 20px; font-size: 0.9rem;">
-                        🔄 Changer d'utilisateur
+                        🔄 Changer
                     </button>
                 </div>
             </div>
         </header>
+
+        <!-- Instructions Firebase -->
+        <div class="firebase-setup" id="firebaseSetup">
+            <h3>⚙️ Configuration Firebase (Pour synchronisation globale)</h3>
+            <p><strong>Pour que tous les visiteurs de votre site GitHub Pages voient les mêmes articles :</strong></p>
+            <ol>
+                <li>Allez sur <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                <li>Créez un nouveau projet (100% gratuit)</li>
+                <li>Activez <strong>Realtime Database</strong> dans le menu</li>
+                <li>Dans "Règles", mettez :
+                    <pre>{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</pre>
+                </li>
+                <li>Allez dans Paramètres du projet → Configuration de votre application Web</li>
+                <li>Copiez votre configuration Firebase</li>
+                <li>Dans ce fichier HTML (ligne ~615), remplacez <code>VOTRE_API_KEY</code> par vos vraies valeurs</li>
+            </ol>
+            <p style="margin-top: 15px; color: var(--accent-warm);">
+                <strong>⚠️ Sans Firebase, les données restent locales (localStorage uniquement)</strong>
+            </p>
+            <button onclick="document.getElementById('firebaseSetup').style.display='none'" class="btn" style="margin-top: 15px; padding: 10px 20px; font-size: 0.9rem;">
+                J'ai compris ✓
+            </button>
+        </div>
 
         <div class="post-form">
             <h2>📝 Publier un Article</h2>
@@ -497,9 +612,45 @@
     </div>
 
     <script>
+        // ==========================================
+        // CONFIGURATION FIREBASE
+        // ==========================================
+        // 🔥 REMPLACEZ CETTE CONFIGURATION PAR LA VÔTRE depuis Firebase Console
+        const firebaseConfig = {
+            apiKey: "VOTRE_API_KEY",
+            authDomain: "VOTRE_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://VOTRE_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "VOTRE_PROJECT_ID",
+            storageBucket: "VOTRE_PROJECT_ID.appspot.com",
+            messagingSenderId: "VOTRE_SENDER_ID",
+            appId: "VOTRE_APP_ID"
+        };
+
+        // Initialiser Firebase
+        let database = null;
+        let isFirebaseConfigured = false;
+
+        try {
+            if (firebaseConfig.apiKey !== "VOTRE_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                isFirebaseConfigured = true;
+                console.log("✅ Firebase connecté - Synchronisation globale active!");
+                document.getElementById('firebaseSetup').style.display = 'none';
+            } else {
+                console.warn("⚠️ Firebase non configuré - Mode local uniquement");
+            }
+        } catch (error) {
+            console.error("❌ Erreur Firebase:", error);
+            isFirebaseConfigured = false;
+        }
+
+        // ==========================================
+        // APPLICATION NEWSFLOW
+        // ==========================================
         class NewsFlowApp {
             constructor() {
-                this.posts = this.loadPosts();
+                this.posts = [];
                 this.currentUser = this.getCurrentUser();
                 this.currentSort = 'hot';
                 this.init();
@@ -507,9 +658,52 @@
 
             init() {
                 this.checkUserSession();
-                this.renderPosts();
+                this.setupDatabase();
                 this.attachEventListeners();
-                this.startAutoRefresh();
+                this.updateConnectionStatus();
+            }
+
+            setupDatabase() {
+                if (isFirebaseConfigured) {
+                    // 🔥 TEMPS RÉEL : Écouter tous les changements de la base de données
+                    database.ref('posts').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        this.posts = data ? Object.values(data) : [];
+                        this.renderPosts();
+                    });
+
+                    // Surveiller la connexion Internet
+                    database.ref('.info/connected').on('value', (snapshot) => {
+                        this.updateConnectionStatus(snapshot.val());
+                    });
+                } else {
+                    // Mode local avec localStorage
+                    this.posts = this.loadPostsLocal();
+                    this.renderPosts();
+                }
+            }
+
+            updateConnectionStatus(connected = null) {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                if (!statusDot || !statusText) return;
+                
+                if (isFirebaseConfigured) {
+                    if (connected === true) {
+                        statusDot.classList.add('connected');
+                        statusText.textContent = '🌍 En ligne';
+                        statusText.style.color = '#00ff88';
+                    } else if (connected === false) {
+                        statusDot.classList.remove('connected');
+                        statusText.textContent = 'Connexion...';
+                        statusText.style.color = 'var(--text-secondary)';
+                    }
+                } else {
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = '💾 Local';
+                    statusText.style.color = 'var(--accent-warm)';
+                }
             }
 
             checkUserSession() {
@@ -521,7 +715,7 @@
             }
 
             promptForUsername() {
-                const username = prompt('👤 Bienvenue sur NewsFlow!\n\nEntrez votre nom d\'utilisateur:');
+                const username = prompt('👤 Bienvenue sur NewsFlow!\n\nChoisissez votre nom d\'utilisateur:');
                 if (username && username.trim()) {
                     this.currentUser = {
                         id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
@@ -539,24 +733,13 @@
                 document.getElementById('author').value = this.currentUser.username;
                 document.getElementById('author').setAttribute('readonly', 'readonly');
                 document.getElementById('currentUserDisplay').innerHTML = `
-                    Connecté en tant que <strong style="color: var(--accent-hot);">${this.escapeHtml(this.currentUser.username)}</strong>
+                    👤 <strong style="color: var(--accent-hot);">${this.escapeHtml(this.currentUser.username)}</strong>
                 `;
             }
 
             getCurrentUser() {
                 const saved = localStorage.getItem('newsflow_current_user');
                 return saved ? JSON.parse(saved) : null;
-            }
-
-            startAutoRefresh() {
-                // Rafraîchir les posts toutes les 5 secondes pour simuler le multi-utilisateur
-                setInterval(() => {
-                    const currentPosts = this.loadPosts();
-                    if (JSON.stringify(currentPosts) !== JSON.stringify(this.posts)) {
-                        this.posts = currentPosts;
-                        this.renderPosts();
-                    }
-                }, 5000);
             }
 
             attachEventListeners() {
@@ -571,7 +754,6 @@
                     });
                 });
 
-                // Bouton de changement d'utilisateur
                 document.getElementById('changeUser').addEventListener('click', () => {
                     if (confirm('Voulez-vous changer d\'utilisateur?')) {
                         localStorage.removeItem('newsflow_current_user');
@@ -580,9 +762,14 @@
                 });
             }
 
-            createPost() {
-                const title = document.getElementById('title').value;
-                const content = document.getElementById('content').value;
+            async createPost() {
+                const title = document.getElementById('title').value.trim();
+                const content = document.getElementById('content').value.trim();
+
+                if (!title || !content) {
+                    this.showNotification('⚠️ Veuillez remplir tous les champs');
+                    return;
+                }
 
                 const post = {
                     id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
@@ -596,24 +783,26 @@
                     timestamp: Date.now()
                 };
 
-                this.posts.unshift(post);
-                this.savePosts();
-                this.renderPosts();
-
-                document.getElementById('title').value = '';
-                document.getElementById('content').value = '';
-                
-                // Animation de succès
-                const firstPost = document.querySelector('.post');
-                if (firstPost) {
-                    firstPost.style.animation = 'none';
-                    setTimeout(() => {
-                        firstPost.style.animation = '';
-                    }, 10);
+                if (isFirebaseConfigured) {
+                    // 🔥 Sauvegarder dans Firebase = TOUS LES VISITEURS VERRONT CET ARTICLE
+                    try {
+                        await database.ref('posts/' + post.id).set(post);
+                        this.showNotification('✅ Article publié et partagé mondialement!');
+                    } catch (error) {
+                        console.error("Erreur lors de la publication:", error);
+                        this.showNotification('❌ Erreur lors de la publication');
+                    }
+                } else {
+                    // Fallback localStorage (local uniquement)
+                    this.posts.unshift(post);
+                    this.savePostsLocal();
+                    this.renderPosts();
+                    this.showNotification('✅ Article publié localement');
                 }
 
-                // Notification
-                this.showNotification('✅ Article publié avec succès!');
+                // Réinitialiser le formulaire
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
             }
 
             showNotification(message) {
@@ -640,12 +829,13 @@
                 }, 3000);
             }
 
-            vote(postId, type) {
+            async vote(postId, type) {
                 const post = this.posts.find(p => p.id === postId);
                 if (!post) return;
 
                 const voterId = this.currentUser.id;
 
+                // Calculer le nouveau vote
                 if (type === 'up') {
                     if (post.upvoters.includes(voterId)) {
                         post.upvoters = post.upvoters.filter(id => id !== voterId);
@@ -672,8 +862,19 @@
                     }
                 }
 
-                this.savePosts();
-                this.renderPosts();
+                if (isFirebaseConfigured) {
+                    // 🔥 Mettre à jour dans Firebase = SYNCHRONISATION INSTANTANÉE
+                    try {
+                        await database.ref('posts/' + postId).set(post);
+                    } catch (error) {
+                        console.error("Erreur lors du vote:", error);
+                        this.showNotification('❌ Erreur lors du vote');
+                    }
+                } else {
+                    // Fallback localStorage
+                    this.savePostsLocal();
+                    this.renderPosts();
+                }
             }
 
             changeSort(sortType) {
@@ -690,7 +891,6 @@
 
                 switch(this.currentSort) {
                     case 'hot':
-                        // Algorithm hot: votes + facteur temps
                         sorted.sort((a, b) => {
                             const hoursSinceA = (Date.now() - a.timestamp) / (1000 * 60 * 60);
                             const hoursSinceB = (Date.now() - b.timestamp) / (1000 * 60 * 60);
@@ -730,7 +930,6 @@
                     const hasUpvoted = post.upvoters.includes(voterId);
                     const hasDownvoted = post.downvoters.includes(voterId);
                     const isOwnPost = post.authorId === this.currentUser.id;
-                    const voteCount = post.upvoters.length - post.downvoters.length;
 
                     return `
                         <div class="post ${isOwnPost ? 'own-post' : ''}">
@@ -777,16 +976,18 @@
                 return div.innerHTML;
             }
 
-            savePosts() {
+            // Méthodes localStorage (fallback sans Firebase)
+            savePostsLocal() {
                 localStorage.setItem('newsflow_posts', JSON.stringify(this.posts));
             }
 
-            loadPosts() {
+            loadPostsLocal() {
                 const saved = localStorage.getItem('newsflow_posts');
                 return saved ? JSON.parse(saved) : [];
             }
         }
 
+        // Démarrer l'application
         const app = new NewsFlowApp();
     </script>
 </body>
