@@ -479,7 +479,10 @@
             setupDatabase() {
                 if (isFirebaseConfigured) {
                     database.ref('posts').on('value', (snapshot) => {
-                        this.posts = snapshot.val() ? Object.values(snapshot.val()) : [];
+                        const data = snapshot.val();
+                        console.log('📦 Données Firebase reçues:', data);
+                        this.posts = data ? Object.values(data) : [];
+                        console.log('📝 Posts chargés:', this.posts.length, 'articles');
                         this.renderPosts();
                     });
 
@@ -585,11 +588,15 @@
                     timestamp: Date.now()
                 };
 
+                console.log('🚀 Tentative de publication:', post);
+
                 if (isFirebaseConfigured) {
                     try {
                         await database.ref('posts/' + post.id).set(post);
+                        console.log('✅ Post envoyé à Firebase avec succès!');
                         this.showNotification('✅ Publié!');
                     } catch (error) {
+                        console.error('❌ Erreur Firebase:', error);
                         this.showNotification('❌ Erreur');
                     }
                 } else {
