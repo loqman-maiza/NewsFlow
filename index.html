@@ -98,65 +98,6 @@
             font-weight: 500;
         }
 
-        .firebase-setup {
-            background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(0, 212, 255, 0.1));
-            border: 2px dashed var(--accent-hot);
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            animation: fadeInUp 0.6s ease-out 0.1s backwards;
-        }
-
-        .firebase-setup h3 {
-            font-family: 'Courier Prime', monospace;
-            color: var(--accent-hot);
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .firebase-setup p {
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            line-height: 1.8;
-        }
-
-        .firebase-setup code {
-            background: var(--bg-secondary);
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: var(--accent-cool);
-            font-family: 'Courier Prime', monospace;
-            font-size: 0.9rem;
-        }
-
-        .firebase-setup ol {
-            margin-left: 20px;
-            color: var(--text-secondary);
-            line-height: 2;
-        }
-
-        .firebase-setup strong {
-            color: var(--text-primary);
-        }
-
-        .firebase-setup a {
-            color: var(--accent-cool);
-            text-decoration: none;
-        }
-
-        .firebase-setup a:hover {
-            text-decoration: underline;
-        }
-
-        .firebase-setup pre {
-            background: var(--bg-secondary);
-            padding: 15px;
-            border-radius: 6px;
-            margin: 10px 0;
-            overflow-x: auto;
-            border: 1px solid var(--border);
-        }
-
         .status-indicator {
             display: inline-block;
             width: 10px;
@@ -550,34 +491,6 @@
             </div>
         </header>
 
-        <!-- Instructions Firebase -->
-        <div class="firebase-setup" id="firebaseSetup">
-            <h3>⚙️ Configuration Firebase (Pour synchronisation globale)</h3>
-            <p><strong>Pour que tous les visiteurs de votre site GitHub Pages voient les mêmes articles :</strong></p>
-            <ol>
-                <li>Allez sur <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
-                <li>Créez un nouveau projet (100% gratuit)</li>
-                <li>Activez <strong>Realtime Database</strong> dans le menu</li>
-                <li>Dans "Règles", mettez :
-                    <pre>{
-  "rules": {
-    ".read": true,
-    ".write": true
-  }
-}</pre>
-                </li>
-                <li>Allez dans Paramètres du projet → Configuration de votre application Web</li>
-                <li>Copiez votre configuration Firebase</li>
-                <li>Dans ce fichier HTML (ligne ~615), remplacez <code>VOTRE_API_KEY</code> par vos vraies valeurs</li>
-            </ol>
-            <p style="margin-top: 15px; color: var(--accent-warm);">
-                <strong>⚠️ Sans Firebase, les données restent locales (localStorage uniquement)</strong>
-            </p>
-            <button onclick="document.getElementById('firebaseSetup').style.display='none'" class="btn" style="margin-top: 15px; padding: 10px 20px; font-size: 0.9rem;">
-                J'ai compris ✓
-            </button>
-        </div>
-
         <div class="post-form">
             <h2>📝 Publier un Article</h2>
             <form id="postForm">
@@ -612,39 +525,33 @@
     </div>
 
     <script>
-     const firebaseConfig = {
-  apiKey: "AIzaSyAZPBbLgfHrHImobBOIXY-wMBnPwvrNdI8",
-  authDomain: "newsflow-30f6b.firebaseapp.com",
-  databaseURL: "https://newsflow-30f6b-default-rtdb.firebaseio.com",
-  projectId: "newsflow-30f6b",
-  storageBucket: "newsflow-30f6b.firebasestorage.app",
-  messagingSenderId: "155297308759",
-  appId: "1:155297308759:web:bffeb971d5dee67c27c312",
-  measurementId: "G-VTGQXD7E52"
-};
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZPBbLgfHrHImobBOIXY-wMBnPwvrNdI8",
+            authDomain: "newsflow-30f6b.firebaseapp.com",
+            databaseURL: "https://newsflow-30f6b-default-rtdb.firebaseio.com",
+            projectId: "newsflow-30f6b",
+            storageBucket: "newsflow-30f6b.firebasestorage.app",
+            messagingSenderId: "155297308759",
+            appId: "1:155297308759:web:bffeb971d5dee67c27c312",
+            measurementId: "G-VTGQXD7E52"
+        };
 
         // Initialiser Firebase
         let database = null;
         let isFirebaseConfigured = false;
 
         try {
-            if (firebaseConfig.apiKey !== "VOTRE_API_KEY") {
-                firebase.initializeApp(firebaseConfig);
-                database = firebase.database();
-                isFirebaseConfigured = true;
-                console.log("✅ Firebase connecté - Synchronisation globale active!");
-                document.getElementById('firebaseSetup').style.display = 'none';
-            } else {
-                console.warn("⚠️ Firebase non configuré - Mode local uniquement");
-            }
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            isFirebaseConfigured = true;
+            console.log("✅ Firebase connecté - Synchronisation globale active!");
         } catch (error) {
             console.error("❌ Erreur Firebase:", error);
             isFirebaseConfigured = false;
         }
 
-        // ==========================================
-        // APPLICATION NEWSFLOW
-        // ==========================================
+        // Application NewsFlow
         class NewsFlowApp {
             constructor() {
                 this.posts = [];
@@ -662,19 +569,16 @@
 
             setupDatabase() {
                 if (isFirebaseConfigured) {
-                    // 🔥 TEMPS RÉEL : Écouter tous les changements de la base de données
                     database.ref('posts').on('value', (snapshot) => {
                         const data = snapshot.val();
                         this.posts = data ? Object.values(data) : [];
                         this.renderPosts();
                     });
 
-                    // Surveiller la connexion Internet
                     database.ref('.info/connected').on('value', (snapshot) => {
                         this.updateConnectionStatus(snapshot.val());
                     });
                 } else {
-                    // Mode local avec localStorage
                     this.posts = this.loadPostsLocal();
                     this.renderPosts();
                 }
@@ -781,23 +685,20 @@
                 };
 
                 if (isFirebaseConfigured) {
-                    // 🔥 Sauvegarder dans Firebase = TOUS LES VISITEURS VERRONT CET ARTICLE
                     try {
                         await database.ref('posts/' + post.id).set(post);
                         this.showNotification('✅ Article publié et partagé mondialement!');
                     } catch (error) {
-                        console.error("Erreur lors de la publication:", error);
+                        console.error("Erreur:", error);
                         this.showNotification('❌ Erreur lors de la publication');
                     }
                 } else {
-                    // Fallback localStorage (local uniquement)
                     this.posts.unshift(post);
                     this.savePostsLocal();
                     this.renderPosts();
                     this.showNotification('✅ Article publié localement');
                 }
 
-                // Réinitialiser le formulaire
                 document.getElementById('title').value = '';
                 document.getElementById('content').value = '';
             }
@@ -832,7 +733,6 @@
 
                 const voterId = this.currentUser.id;
 
-                // Calculer le nouveau vote
                 if (type === 'up') {
                     if (post.upvoters.includes(voterId)) {
                         post.upvoters = post.upvoters.filter(id => id !== voterId);
@@ -860,15 +760,12 @@
                 }
 
                 if (isFirebaseConfigured) {
-                    // 🔥 Mettre à jour dans Firebase = SYNCHRONISATION INSTANTANÉE
                     try {
                         await database.ref('posts/' + postId).set(post);
                     } catch (error) {
-                        console.error("Erreur lors du vote:", error);
-                        this.showNotification('❌ Erreur lors du vote');
+                        console.error("Erreur:", error);
                     }
                 } else {
-                    // Fallback localStorage
                     this.savePostsLocal();
                     this.renderPosts();
                 }
@@ -973,7 +870,6 @@
                 return div.innerHTML;
             }
 
-            // Méthodes localStorage (fallback sans Firebase)
             savePostsLocal() {
                 localStorage.setItem('newsflow_posts', JSON.stringify(this.posts));
             }
@@ -984,7 +880,6 @@
             }
         }
 
-        // Démarrer l'application
         const app = new NewsFlowApp();
     </script>
 </body>
