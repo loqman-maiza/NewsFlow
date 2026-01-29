@@ -622,6 +622,11 @@
                 const post = this.posts.find(p => p.id === postId);
                 if (!post) return;
 
+                // S'assurer que les tableaux existent
+                post.upvoters = post.upvoters || [];
+                post.downvoters = post.downvoters || [];
+                post.votes = post.votes || 0;
+
                 const voterId = this.currentUser.id;
 
                 if (type === 'up') {
@@ -694,25 +699,34 @@
                     return;
                 }
 
-                container.innerHTML = sorted.map((post, i) => `
-                    <div class="post ${post.authorId === this.currentUser.id ? 'own-post' : ''}">
-                        ${i < 3 ? `<div class="rank-badge">#${i + 1}</div>` : ''}
-                        <div class="vote-section">
-                            <button class="vote-btn upvote ${post.upvoters.includes(this.currentUser.id) ? 'voted' : ''}" onclick="app.vote('${post.id}', 'up')">▲</button>
-                            <div class="vote-count">${post.votes}</div>
-                            <button class="vote-btn downvote ${post.downvoters.includes(this.currentUser.id) ? 'voted' : ''}" onclick="app.vote('${post.id}', 'down')">▼</button>
-                        </div>
-                        <div class="post-content">
-                            <h3 class="post-title">${this.escapeHtml(post.title)}</h3>
-                            <div class="post-meta">
-                                <span>👤 ${this.escapeHtml(post.author)}${post.authorId === this.currentUser.id ? ' (Vous)' : ''}</span>
-                                <span>🕐 ${this.getTimeAgo(post.timestamp)}</span>
-                                <span>👍 ${post.upvoters.length} 👎 ${post.downvoters.length}</span>
+                container.innerHTML = sorted.map((post, i) => {
+                    // S'assurer que upvoters et downvoters sont des tableaux
+                    const upvoters = post.upvoters || [];
+                    const downvoters = post.downvoters || [];
+                    const isOwn = post.authorId === this.currentUser.id;
+                    const hasUpvoted = upvoters.includes(this.currentUser.id);
+                    const hasDownvoted = downvoters.includes(this.currentUser.id);
+                    
+                    return `
+                        <div class="post ${isOwn ? 'own-post' : ''}">
+                            ${i < 3 ? `<div class="rank-badge">#${i + 1}</div>` : ''}
+                            <div class="vote-section">
+                                <button class="vote-btn upvote ${hasUpvoted ? 'voted' : ''}" onclick="app.vote('${post.id}', 'up')">▲</button>
+                                <div class="vote-count">${post.votes || 0}</div>
+                                <button class="vote-btn downvote ${hasDownvoted ? 'voted' : ''}" onclick="app.vote('${post.id}', 'down')">▼</button>
                             </div>
-                            <div class="post-body">${this.escapeHtml(post.content)}</div>
+                            <div class="post-content">
+                                <h3 class="post-title">${this.escapeHtml(post.title)}</h3>
+                                <div class="post-meta">
+                                    <span>👤 ${this.escapeHtml(post.author)}${isOwn ? ' (Vous)' : ''}</span>
+                                    <span>🕐 ${this.getTimeAgo(post.timestamp)}</span>
+                                    <span>👍 ${upvoters.length} 👎 ${downvoters.length}</span>
+                                </div>
+                                <div class="post-body">${this.escapeHtml(post.content)}</div>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             getTimeAgo(timestamp) {
