@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsFlow - Réseau Social d'Information</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans:wght@400;500;600&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #222;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-hot: #ff3366;
+            --accent-warm: #ff9500;
+            --accent-cool: #00d4ff;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 51, 102, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 40px 0 30px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 50px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--accent-hot), var(--accent-cool));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Post Form */
+        .post-form {
+            background: var(--bg-card);
+            padding: 35px;
+            border-radius: 12px;
+            margin-bottom: 50px;
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.6s ease-out 0.2s backwards;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .post-form h2 {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: var(--accent-hot);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-hot);
+            box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-hot), var(--accent-warm));
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 51, 102, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Sorting */
+        .sorting {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 35px;
+            animation: fadeInUp 0.6s ease-out 0.3s backwards;
+        }
+
+        .sort-btn {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            padding: 12px 25px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sort-btn:hover {
+            border-color: var(--accent-cool);
+            color: var(--text-primary);
+        }
+
+        .sort-btn.active {
+            background: var(--accent-cool);
+            color: var(--bg-primary);
+            border-color: var(--accent-cool);
+        }
+
+        /* Posts */
+        .posts {
+            display: grid;
+            gap: 25px;
+        }
+
+        .post {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out backwards;
+            display: flex;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-hot), var(--accent-cool));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .post:hover {
+            border-color: var(--accent-hot);
+            transform: translateX(5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .post:hover::before {
+            opacity: 1;
+        }
+
+        .post:nth-child(1) { animation-delay: 0.4s; }
+        .post:nth-child(2) { animation-delay: 0.5s; }
+        .post:nth-child(3) { animation-delay: 0.6s; }
+        .post:nth-child(4) { animation-delay: 0.7s; }
+        .post:nth-child(5) { animation-delay: 0.8s; }
+
+        .post.own-post {
+            border-color: var(--accent-cool);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 212, 255, 0.05) 100%);
+        }
+
+        .post.own-post::before {
+            background: var(--accent-cool);
+            opacity: 1;
+        }
+
+        .vote-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 60px;
+        }
+
+        .vote-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .vote-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .vote-btn.upvote:hover,
+        .vote-btn.upvote.voted {
+            background: var(--accent-hot);
+            border-color: var(--accent-hot);
+            color: white;
+        }
+
+        .vote-btn.downvote:hover,
+        .vote-btn.downvote.voted {
+            background: #666;
+            border-color: #666;
+            color: white;
+        }
+
+        .vote-count {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .post-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .post-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-body {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-top: 15px;
+        }
+
+        .rank-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, var(--accent-warm), var(--accent-hot));
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .post {
+                flex-direction: column;
+            }
+
+            .vote-section {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .post-title {
+                font-size: 1.5rem;
+            }
+
+            .sorting {
+                flex-wrap: wrap;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <h1 class="logo">NewsFlow</h1>
+                    <p class="tagline">L'information par la communauté</p>
+                </div>
+                <div class="user-info">
+                    <span id="currentUserDisplay" style="color: var(--text-secondary); font-size: 0.95rem; margin-right: 15px;">
+                        Chargement...
+                    </span>
+                    <button id="changeUser" class="btn" style="padding: 10px 20px; font-size: 0.9rem;">
+                        🔄 Changer d'utilisateur
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="post-form">
+            <h2>📝 Publier un Article</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label for="title">Titre de l'article</label>
+                    <input type="text" id="title" placeholder="Un titre accrocheur..." required>
+                </div>
+                <div class="form-group">
+                    <label for="author">Votre nom</label>
+                    <input type="text" id="author" placeholder="Anonyme" required>
+                </div>
+                <div class="form-group">
+                    <label for="content">Contenu</label>
+                    <textarea id="content" placeholder="Partagez votre information..." required></textarea>
+                </div>
+                <button type="submit" class="btn">Publier</button>
+            </form>
+        </div>
+
+        <div class="sorting">
+            <button class="sort-btn active" data-sort="hot">🔥 Populaire</button>
+            <button class="sort-btn" data-sort="new">🆕 Récent</button>
+            <button class="sort-btn" data-sort="top">⭐ Top</button>
+        </div>
+
+        <div class="posts" id="posts">
+            <div class="empty-state">
+                <h3>Aucun article pour le moment</h3>
+                <p>Soyez le premier à partager une information !</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class NewsFlowApp {
+            constructor() {
+                this.posts = this.loadPosts();
+                this.currentUser = this.getCurrentUser();
+                this.currentSort = 'hot';
+                this.init();
+            }
+
+            init() {
+                this.checkUserSession();
+                this.renderPosts();
+                this.attachEventListeners();
+                this.startAutoRefresh();
+            }
+
+            checkUserSession() {
+                if (!this.currentUser) {
+                    this.promptForUsername();
+                } else {
+                    this.updateUserDisplay();
+                }
+            }
+
+            promptForUsername() {
+                const username = prompt('👤 Bienvenue sur NewsFlow!\n\nEntrez votre nom d\'utilisateur:');
+                if (username && username.trim()) {
+                    this.currentUser = {
+                        id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        username: username.trim(),
+                        joinedAt: Date.now()
+                    };
+                    localStorage.setItem('newsflow_current_user', JSON.stringify(this.currentUser));
+                    this.updateUserDisplay();
+                } else {
+                    this.promptForUsername();
+                }
+            }
+
+            updateUserDisplay() {
+                document.getElementById('author').value = this.currentUser.username;
+                document.getElementById('author').setAttribute('readonly', 'readonly');
+                document.getElementById('currentUserDisplay').innerHTML = `
+                    Connecté en tant que <strong style="color: var(--accent-hot);">${this.escapeHtml(this.currentUser.username)}</strong>
+                `;
+            }
+
+            getCurrentUser() {
+                const saved = localStorage.getItem('newsflow_current_user');
+                return saved ? JSON.parse(saved) : null;
+            }
+
+            startAutoRefresh() {
+                // Rafraîchir les posts toutes les 5 secondes pour simuler le multi-utilisateur
+                setInterval(() => {
+                    const currentPosts = this.loadPosts();
+                    if (JSON.stringify(currentPosts) !== JSON.stringify(this.posts)) {
+                        this.posts = currentPosts;
+                        this.renderPosts();
+                    }
+                }, 5000);
+            }
+
+            attachEventListeners() {
+                document.getElementById('postForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createPost();
+                });
+
+                document.querySelectorAll('.sort-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.changeSort(e.target.dataset.sort);
+                    });
+                });
+
+                // Bouton de changement d'utilisateur
+                document.getElementById('changeUser').addEventListener('click', () => {
+                    if (confirm('Voulez-vous changer d\'utilisateur?')) {
+                        localStorage.removeItem('newsflow_current_user');
+                        location.reload();
+                    }
+                });
+            }
+
+            createPost() {
+                const title = document.getElementById('title').value;
+                const content = document.getElementById('content').value;
+
+                const post = {
+                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    title,
+                    author: this.currentUser.username,
+                    authorId: this.currentUser.id,
+                    content,
+                    votes: 0,
+                    upvoters: [],
+                    downvoters: [],
+                    timestamp: Date.now()
+                };
+
+                this.posts.unshift(post);
+                this.savePosts();
+                this.renderPosts();
+
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
+                
+                // Animation de succès
+                const firstPost = document.querySelector('.post');
+                if (firstPost) {
+                    firstPost.style.animation = 'none';
+                    setTimeout(() => {
+                        firstPost.style.animation = '';
+                    }, 10);
+                }
+
+                // Notification
+                this.showNotification('✅ Article publié avec succès!');
+            }
+
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #ff3366, #ff9500);
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    box-shadow: 0 10px 30px rgba(255, 51, 102, 0.4);
+                    z-index: 1000;
+                    animation: slideInRight 0.3s ease-out;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+
+            vote(postId, type) {
+                const post = this.posts.find(p => p.id === postId);
+                if (!post) return;
+
+                const voterId = this.currentUser.id;
+
+                if (type === 'up') {
+                    if (post.upvoters.includes(voterId)) {
+                        post.upvoters = post.upvoters.filter(id => id !== voterId);
+                        post.votes--;
+                    } else {
+                        if (post.downvoters.includes(voterId)) {
+                            post.downvoters = post.downvoters.filter(id => id !== voterId);
+                            post.votes++;
+                        }
+                        post.upvoters.push(voterId);
+                        post.votes++;
+                    }
+                } else {
+                    if (post.downvoters.includes(voterId)) {
+                        post.downvoters = post.downvoters.filter(id => id !== voterId);
+                        post.votes++;
+                    } else {
+                        if (post.upvoters.includes(voterId)) {
+                            post.upvoters = post.upvoters.filter(id => id !== voterId);
+                            post.votes--;
+                        }
+                        post.downvoters.push(voterId);
+                        post.votes--;
+                    }
+                }
+
+                this.savePosts();
+                this.renderPosts();
+            }
+
+            changeSort(sortType) {
+                this.currentSort = sortType;
+                document.querySelectorAll('.sort-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-sort="${sortType}"]`).classList.add('active');
+                this.renderPosts();
+            }
+
+            sortPosts() {
+                const sorted = [...this.posts];
+
+                switch(this.currentSort) {
+                    case 'hot':
+                        // Algorithm hot: votes + facteur temps
+                        sorted.sort((a, b) => {
+                            const hoursSinceA = (Date.now() - a.timestamp) / (1000 * 60 * 60);
+                            const hoursSinceB = (Date.now() - b.timestamp) / (1000 * 60 * 60);
+                            const scoreA = a.votes / Math.pow(hoursSinceA + 2, 1.5);
+                            const scoreB = b.votes / Math.pow(hoursSinceB + 2, 1.5);
+                            return scoreB - scoreA;
+                        });
+                        break;
+                    case 'new':
+                        sorted.sort((a, b) => b.timestamp - a.timestamp);
+                        break;
+                    case 'top':
+                        sorted.sort((a, b) => b.votes - a.votes);
+                        break;
+                }
+
+                return sorted;
+            }
+
+            renderPosts() {
+                const postsContainer = document.getElementById('posts');
+                const sortedPosts = this.sortPosts();
+                const voterId = this.currentUser.id;
+
+                if (sortedPosts.length === 0) {
+                    postsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h3>Aucun article pour le moment</h3>
+                            <p>Soyez le premier à partager une information !</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                postsContainer.innerHTML = sortedPosts.map((post, index) => {
+                    const timeAgo = this.getTimeAgo(post.timestamp);
+                    const hasUpvoted = post.upvoters.includes(voterId);
+                    const hasDownvoted = post.downvoters.includes(voterId);
+                    const isOwnPost = post.authorId === this.currentUser.id;
+                    const voteCount = post.upvoters.length - post.downvoters.length;
+
+                    return `
+                        <div class="post ${isOwnPost ? 'own-post' : ''}">
+                            ${index < 3 ? `<div class="rank-badge">#${index + 1}</div>` : ''}
+                            <div class="vote-section">
+                                <button class="vote-btn upvote ${hasUpvoted ? 'voted' : ''}" onclick="app.vote('${post.id}', 'up')">
+                                    ▲
+                                </button>
+                                <div class="vote-count">${post.votes}</div>
+                                <button class="vote-btn downvote ${hasDownvoted ? 'voted' : ''}" onclick="app.vote('${post.id}', 'down')">
+                                    ▼
+                                </button>
+                            </div>
+                            <div class="post-content">
+                                <div class="post-header">
+                                    <div>
+                                        <h3 class="post-title">${this.escapeHtml(post.title)}</h3>
+                                        <div class="post-meta">
+                                            <span>👤 ${this.escapeHtml(post.author)}${isOwnPost ? ' <strong>(Vous)</strong>' : ''}</span>
+                                            <span>🕐 ${timeAgo}</span>
+                                            <span>👍 ${post.upvoters.length} 👎 ${post.downvoters.length}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="post-body">${this.escapeHtml(post.content)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            getTimeAgo(timestamp) {
+                const seconds = Math.floor((Date.now() - timestamp) / 1000);
+                
+                if (seconds < 60) return 'À l\'instant';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)} h`;
+                return `${Math.floor(seconds / 86400)} j`;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            savePosts() {
+                localStorage.setItem('newsflow_posts', JSON.stringify(this.posts));
+            }
+
+            loadPosts() {
+                const saved = localStorage.getItem('newsflow_posts');
+                return saved ? JSON.parse(saved) : [];
+            }
+        }
+
+        const app = new NewsFlowApp();
+    </script>
+</body>
+</html>
