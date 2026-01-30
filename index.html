@@ -350,6 +350,34 @@
             font-family: 'Courier Prime', monospace;
         }
 
+        .delete-btn {
+            position: absolute;
+            top: 15px; left: 15px;
+            background: rgba(255, 51, 51, 0.9);
+            color: white;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3);
+            z-index: 10;
+        }
+
+        .delete-btn:hover {
+            background: #ff0000;
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(255, 0, 0, 0.5);
+        }
+
+        .delete-btn:active {
+            transform: scale(0.95);
+        }
+
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -618,6 +646,33 @@
                 setTimeout(() => n.remove(), 3000);
             }
 
+            async deletePost(postId) {
+                if (this.currentUser.username.toLowerCase() !== 'loqman') {
+                    this.showNotification('❌ Non autorisé');
+                    return;
+                }
+
+                if (!confirm('Supprimer cet article définitivement ?')) {
+                    return;
+                }
+
+                if (isFirebaseConfigured) {
+                    try {
+                        await database.ref('posts/' + postId).remove();
+                        console.log('🗑️ Post supprimé de Firebase');
+                        this.showNotification('✅ Article supprimé');
+                    } catch (error) {
+                        console.error('❌ Erreur suppression:', error);
+                        this.showNotification('❌ Erreur de suppression');
+                    }
+                } else {
+                    this.posts = this.posts.filter(p => p.id !== postId);
+                    this.savePostsLocal();
+                    this.renderPosts();
+                    this.showNotification('✅ Article supprimé');
+                }
+            }
+
             async vote(postId, type) {
                 const post = this.posts.find(p => p.id === postId);
                 if (!post) return;
@@ -699,6 +754,8 @@
                     return;
                 }
 
+                const isLoqman = this.currentUser.username.toLowerCase() === 'loqman';
+
                 container.innerHTML = sorted.map((post, i) => {
                     // S'assurer que upvoters et downvoters sont des tableaux
                     const upvoters = post.upvoters || [];
@@ -710,6 +767,7 @@
                     return `
                         <div class="post ${isOwn ? 'own-post' : ''}">
                             ${i < 3 ? `<div class="rank-badge">#${i + 1}</div>` : ''}
+                            ${isLoqman ? `<button class="delete-btn" onclick="if(confirm('Supprimer cet article ?')) app.deletePost('${post.id}')" title="Supprimer (Admin)">🗑️</button>` : ''}
                             <div class="vote-section">
                                 <button class="vote-btn upvote ${hasUpvoted ? 'voted' : ''}" onclick="app.vote('${post.id}', 'up')">▲</button>
                                 <div class="vote-count">${post.votes || 0}</div>
